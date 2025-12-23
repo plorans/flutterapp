@@ -15,16 +15,16 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "GeekCollector Perfil " // Cambia si tu app tiene otro ID
+    namespace = "com.geekcollector.appfix" // Cambia si tu app tiene otro ID
     compileSdk = 36 // Ajusta a la versión que uses
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        applicationId = "Perfil"
-        minSdk = flutter.minSdkVersion
-        targetSdk = 36
-        versionCode = 3
-        versionName = "1.1.2" // opcional: puedes actualizar también el nombre visible
+        applicationId = "com.geekcollector.appfix"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 6
+        versionName = "1.1.6" // opcional: puedes actualizar también el nombre visible
 
     }
 
@@ -50,8 +50,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -64,6 +64,6 @@ flutter {
     source = "../.."
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
-}
+// dependencies {
+//    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
+//}

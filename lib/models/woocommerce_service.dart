@@ -1,7 +1,7 @@
 class WooCommerceService {
   // ... métodos existentes ...
 
-  Future<UserProfile> getUserProfile(String token) async {
+  Future<ProfileModel> getProfileModel(String token) async {
     try {
       final url = Uri.parse('$baseUrl/custom/v1/user-profile');
       
@@ -15,7 +15,7 @@ class WooCommerceService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return UserProfile.fromJson(data);
+        return ProfileModel.fromJson(data);
       } else {
         throw Exception('Error obteniendo perfil: ${response.statusCode}');
       }
