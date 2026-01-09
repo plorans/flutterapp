@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
-import 'dart:math';
+import 'tournament_stats_screen.dart';
 import '../services/imagenes_service.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -40,8 +40,9 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Map<String, dynamic>? getActiveSubscription() {
-    final activeSubs =
-        subscriptions.where((sub) => sub['status'] == 'active').toList();
+    final activeSubs = subscriptions
+        .where((sub) => sub['status'] == 'active')
+        .toList();
 
     if (activeSubs.isEmpty) return null;
 
@@ -127,7 +128,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  
+
                   // Avatar e información
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,27 +187,38 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 25),
-                  
+
                   // Sección de torneos y membresía SIN RECUADROS
                   SizedBox(
-                    height: 140,
-                    child: Row(
+                    height: 220,
+                    child: Stack(
                       children: [
-                        // Slider de torneos - SIN RECUADRO
-                        Expanded(
-                          flex: 3,
-                          child: _TournamentSlider(),
-                        ),
-                        const SizedBox(width: 20),
-                        
-                        // Imagen de membresía - SIN RECUADRO
-                        Expanded(
-                          flex: 2,
-                          child: _MembershipImage(
-                            subscriptionImage: subscriptionImage,
-                            subscriberName: subscriberName,
+                        // LEFT: Actions (constrained)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.6,
+                            child: const _TournamentActions(),
                           ),
                         ),
+
+                        // RIGHT: Membership image (floating)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Transform.translate(
+                            offset: const Offset(
+                              30,
+                              0,
+                            ), 
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.45,
+                              child: _MembershipImage(
+                                subscriptionImage: subscriptionImage,
+                              ),
+                            ),
+                          ),
+                        ),
+
                       ],
                     ),
                   ),
@@ -214,7 +226,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // STATS SECTION (mantiene recuadro)
           SliverToBoxAdapter(
             child: Container(
@@ -243,7 +255,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // ACHIEVEMENTS SECTION
           SliverToBoxAdapter(
             child: Container(
@@ -290,9 +302,9 @@ class _VerticalDivider extends StatelessWidget {
 
 class _AvatarWidget extends StatefulWidget {
   final String avatarUrl;
-  
+
   const _AvatarWidget({required this.avatarUrl});
-  
+
   @override
   State<_AvatarWidget> createState() => __AvatarWidgetState();
 }
@@ -300,13 +312,13 @@ class _AvatarWidget extends StatefulWidget {
 class __AvatarWidgetState extends State<_AvatarWidget> {
   Uint8List? _avatarBytes;
   bool _isLoading = true;
-  
+
   @override
   void initState() {
     super.initState();
     _loadAvatar();
   }
-  
+
   Future<void> _loadAvatar() async {
     if (widget.avatarUrl.isEmpty) {
       setState(() {
@@ -314,7 +326,7 @@ class __AvatarWidgetState extends State<_AvatarWidget> {
       });
       return;
     }
-    
+
     try {
       final imageBytes = await ImageService.downloadImage(widget.avatarUrl);
       setState(() {
@@ -328,7 +340,7 @@ class __AvatarWidgetState extends State<_AvatarWidget> {
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -336,10 +348,7 @@ class __AvatarWidgetState extends State<_AvatarWidget> {
       height: 80,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.orange,
-          width: 3,
-        ),
+        border: Border.all(color: Colors.orange, width: 3),
         boxShadow: [
           BoxShadow(
             color: Colors.orange.withOpacity(0.5),
@@ -360,18 +369,11 @@ class __AvatarWidgetState extends State<_AvatarWidget> {
                 ),
               )
             : _avatarBytes != null
-                ? Image.memory(
-                    _avatarBytes!,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    color: Colors.grey[800],
-                    child: const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.grey,
-                    ),
-                  ),
+            ? Image.memory(_avatarBytes!, fit: BoxFit.cover)
+            : Container(
+                color: Colors.grey[800],
+                child: const Icon(Icons.person, size: 40, color: Colors.grey),
+              ),
       ),
     );
   }
@@ -380,192 +382,130 @@ class __AvatarWidgetState extends State<_AvatarWidget> {
 // WIDGET PARA IMAGEN DE MEMBRESÍA SIN RECUADRO
 class _MembershipImage extends StatelessWidget {
   final String subscriptionImage;
-  final String subscriberName;
-  
-  const _MembershipImage({
-    required this.subscriptionImage,
-    required this.subscriberName,
-  });
-  
+
+  const _MembershipImage({required this.subscriptionImage});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Imagen de membresía - SIN RECUADRO, SOBRE FONDO DIRECTO
-        Container(
-          height: 100,
-          width: 100,
-          child: subscriptionImage.isNotEmpty
-              ? Image.asset(
-                  subscriptionImage,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return _buildMembershipFallback();
-                  },
-                )
-              : _buildMembershipFallback(),
-        ),
-        const SizedBox(height: 8),
-        
-        // Nombre del nivel
-        Text(
-          subscriberName,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            letterSpacing: 1.0,
-            shadows: [
-              Shadow(
-                color: Colors.white,
-                blurRadius: 2,
-                offset: Offset(1, 1),
-              ),
-            ],
+    return SizedBox(
+      height: 220,
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Image.asset(
+              subscriptionImage,
+              height: 320,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return _buildMembershipFallback();
+              },
+            ),
           ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+        ],
+      ),
     );
   }
-  
+
   Widget _buildMembershipFallback() {
-    return Center(
-      child: Icon(
-        Icons.workspace_premium,
-        color: Colors.black.withOpacity(0.8),
-        size: 50,
-      ),
+    return const Center(
+      child: Icon(Icons.workspace_premium, color: Colors.black, size: 50),
     );
   }
 }
 
 // SLIDER DE TORNEOS SIN RECUADRO
-class _TournamentSlider extends StatefulWidget {
-  @override
-  State<_TournamentSlider> createState() => __TournamentSliderState();
-}
+class _TournamentActions extends StatelessWidget {
+  const _TournamentActions();
 
-class __TournamentSliderState extends State<_TournamentSlider> {
-  late PageController _pageController;
-  int _currentPage = 0;
-  
-  final List<Map<String, dynamic>> _tournamentData = [
-    {
-      'count': '1',
-      'title': 'TORNEOS SEMANALES',
-      'color': Colors.yellow,
-    },
-    {
-      'count': '3',
-      'title': 'TORNEOS MENSUALES',
-      'color': Colors.orange,
-    }
-  ];
-  
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(viewportFraction: 0.9);
-    _startAutoAnimation();
-  }
-  
-  void _startAutoAnimation() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && _tournamentData.length > 1) {
-        final nextPage = (_currentPage + 1) % _tournamentData.length;
-        _pageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
-        _startAutoAnimation();
-      }
-    });
-  }
-  
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-  
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 120,
-      child: PageView.builder(
-        controller: _pageController,
-        itemCount: _tournamentData.length,
-        onPageChanged: (int page) {
-          setState(() {
-            _currentPage = page;
-          });
-        },
-        itemBuilder: (context, index) {
-          final tournament = _tournamentData[index];
-          final isActive = index == _currentPage;
-          
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 5),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  tournament['count'],
-                  style: TextStyle(
-                    fontSize: isActive ? 48 : 40,
-                    fontWeight: FontWeight.bold,
-                    color: tournament['color'],
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 8,
-                        offset: const Offset(2, 2),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  tournament['title'],
-                  style: TextStyle(
-                    fontSize: isActive ? 13 : 11,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                    letterSpacing: 1.2,
-                    shadows: [
-                      Shadow(
-                        color: Colors.white.withOpacity(0.5),
-                        blurRadius: 2,
-                        offset: const Offset(1, 1),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_tournamentData.length, (dotIndex) {
-                    return Container(
-                      width: dotIndex == _currentPage ? 10 : 6,
-                      height: dotIndex == _currentPage ? 10 : 6,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: dotIndex == _currentPage 
-                            ? tournament['color'] 
-                            : Colors.black.withOpacity(0.5),
-                      ),
-                    );
-                  }),
-                ),
-              ],
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _ActionButton(
+          label: 'TORNEOS MENSUALES',
+          icon: Icons.calendar_month,
+          color: Colors.deepOrange,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const TournamentStatsScreen(tipo: 'torneos'),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        _ActionButton(
+          label: 'RANKING GLOBAL',
+          icon: Icons.public,
+          color: Colors.deepOrange,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const TournamentStatsScreen(tipo: 'global'),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.9), color.withOpacity(0.7)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.5),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          );
-        },
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.black, size: 22),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.1,
+                color: Colors.black,
+              ),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, color: Colors.black),
+          ],
+        ),
       ),
     );
   }
@@ -574,9 +514,9 @@ class __TournamentSliderState extends State<_TournamentSlider> {
 class _StatItem extends StatelessWidget {
   final String label;
   final String value;
-  
+
   const _StatItem(this.label, this.value);
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -589,11 +529,7 @@ class _StatItem extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.orange,
             shadows: [
-              Shadow(
-                color: Colors.black,
-                blurRadius: 5,
-                offset: Offset(1, 1),
-              ),
+              Shadow(color: Colors.black, blurRadius: 5, offset: Offset(1, 1)),
             ],
           ),
         ),
@@ -614,9 +550,9 @@ class _StatItem extends StatelessWidget {
 
 class _AchievementsWidget extends StatefulWidget {
   final List<dynamic> achievements;
-  
+
   const _AchievementsWidget({required this.achievements});
-  
+
   @override
   State<_AchievementsWidget> createState() => __AchievementsWidgetState();
 }
@@ -626,7 +562,7 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
   int _currentPage = 0;
   final Map<String, Uint8List> _imageCache = {};
   final Map<String, bool> _loadingStates = {};
-  
+
   @override
   void initState() {
     super.initState();
@@ -634,7 +570,7 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
     _preloadImages();
     _startAutoScroll();
   }
-  
+
   void _preloadImages() {
     for (final achievement in widget.achievements) {
       final iconUrl = achievement['icon']?.toString() ?? '';
@@ -643,14 +579,14 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
       }
     }
   }
-  
+
   Future<void> _loadImage(String url) async {
     if (_imageCache.containsKey(url)) return;
-    
+
     setState(() {
       _loadingStates[url] = true;
     });
-    
+
     try {
       final imageBytes = await ImageService.downloadImage(url);
       if (imageBytes != null && mounted) {
@@ -667,10 +603,10 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
       }
     }
   }
-  
+
   void _startAutoScroll() {
     if (widget.achievements.length <= 1) return;
-    
+
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
         final nextPage = (_currentPage + 1) % widget.achievements.length;
@@ -683,13 +619,13 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
       }
     });
   }
-  
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (widget.achievements.isEmpty) {
@@ -727,7 +663,7 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
         ],
       );
     }
-    
+
     return SizedBox(
       height: 250,
       child: Column(
@@ -747,13 +683,17 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
                 final achievement = widget.achievements[index];
                 final iconUrl = achievement['icon']?.toString() ?? '';
                 final title = achievement['title']?.toString() ?? 'Logro';
-                
-                return _buildAchievementCard(iconUrl, title, index == _currentPage);
+
+                return _buildAchievementCard(
+                  iconUrl,
+                  title,
+                  index == _currentPage,
+                );
               },
             ),
           ),
           const SizedBox(height: 15),
-          
+
           // Indicadores de página
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -764,21 +704,23 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: index == _currentPage 
-                      ? Colors.orange 
+                  color: index == _currentPage
+                      ? Colors.orange
                       : Colors.orange.withOpacity(0.3),
                 ),
               );
             }),
           ),
-          
+
           // Título del logro actual
           const SizedBox(height: 15),
-          if (widget.achievements.isNotEmpty && _currentPage < widget.achievements.length)
+          if (widget.achievements.isNotEmpty &&
+              _currentPage < widget.achievements.length)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                widget.achievements[_currentPage]['title']?.toString() ?? 'Logro',
+                widget.achievements[_currentPage]['title']?.toString() ??
+                    'Logro',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -793,11 +735,11 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
       ),
     );
   }
-  
+
   Widget _buildAchievementCard(String iconUrl, String title, bool isActive) {
     final isLoading = _loadingStates[iconUrl] ?? true;
     final imageBytes = _imageCache[iconUrl];
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Column(
@@ -817,24 +759,24 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
                     ),
                   )
                 : imageBytes != null
-                    ? Image.memory(
-                        imageBytes!,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.emoji_events,
-                            color: Colors.orange.withOpacity(0.7),
-                            size: 60,
-                          );
-                        },
-                      )
-                    : Icon(
+                ? Image.memory(
+                    imageBytes!,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
                         Icons.emoji_events,
                         color: Colors.orange.withOpacity(0.7),
                         size: 60,
-                      ),
+                      );
+                    },
+                  )
+                : Icon(
+                    Icons.emoji_events,
+                    color: Colors.orange.withOpacity(0.7),
+                    size: 60,
+                  ),
           ),
-          
+
           // Nombre del logro
           const SizedBox(height: 10),
           Padding(
