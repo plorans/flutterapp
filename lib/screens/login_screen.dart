@@ -103,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
               achievements: user['achievements'] ?? [],
               subscriptions: user['subscriptions'] ?? [],
               avatar: user['avatar'] ?? '',
+              tournamentStats: user['tournament_stats'] ?? {},
             ),
           ),
         );

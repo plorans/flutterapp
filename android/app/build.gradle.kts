@@ -23,8 +23,8 @@ android {
         applicationId = "com.geekcollector.appfix"
         minSdk = 24
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.1.9" // opcional: puedes actualizar también el nombre visible
+        versionCode = 11
+        versionName = "1.1.11" // opcional: puedes actualizar también el nombre visible
 
     }
 

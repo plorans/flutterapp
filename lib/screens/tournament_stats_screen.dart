@@ -345,7 +345,7 @@ class _TournamentStatsScreenState extends State<TournamentStatsScreen> {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  '${s.jugador} ${s.geekTag}',
+                  s.jugador,
                   style: const TextStyle(
                     color: AppColors.white,
                     fontWeight: FontWeight.w600,

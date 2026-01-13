@@ -14,6 +14,7 @@ class ProfileScreen extends StatelessWidget {
   final List<dynamic> achievements;
   final List<dynamic> subscriptions;
   final String avatar;
+  final Map<String, dynamic>  tournamentStats;
 
   const ProfileScreen({
     super.key,
@@ -27,6 +28,7 @@ class ProfileScreen extends StatelessWidget {
     required this.achievements,
     required this.subscriptions,
     required this.avatar,
+    required this.tournamentStats,
   });
 
   Map<String, String> getSubscriptionLevels() {
@@ -86,6 +88,10 @@ class ProfileScreen extends StatelessWidget {
     final activeSubscription = getActiveSubscription();
     final subscriberName = activeSubscription?['name'] ?? "BYTE SEEKER";
     final subscriptionImage = getSubscriptionImage(subscriberName);
+    final int torneos = tournamentStats['torneos_jugados'] ?? 0;
+    final int victorias = tournamentStats['torneos_ganados'] ?? 0;
+    final double winRate = (tournamentStats['win_rate'] ?? 0).toDouble();
+
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -245,11 +251,11 @@ class ProfileScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _StatItem("Victorias", "0"),
+                    _StatItem("Victorias", victorias.toString()),
                     _VerticalDivider(),
-                    _StatItem("Win Rate", "0%"),
+                    _StatItem("Win Rate", "${winRate.toStringAsFixed(2)}%"),
                     _VerticalDivider(),
-                    _StatItem("Torneos", "0"),
+                    _StatItem("Torneos", torneos.toString()),
                   ],
                 ),
               ),
@@ -714,24 +720,24 @@ class __AchievementsWidgetState extends State<_AchievementsWidget> {
           ),
 
           // Título del logro actual
-          const SizedBox(height: 15),
-          if (widget.achievements.isNotEmpty &&
-              _currentPage < widget.achievements.length)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                widget.achievements[_currentPage]['title']?.toString() ??
-                    'Logro',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+          // const SizedBox(height: 15),
+          // if (widget.achievements.isNotEmpty &&
+          //     _currentPage < widget.achievements.length)
+          //   Padding(
+          //     padding: const EdgeInsets.symmetric(horizontal: 20),
+          //     child: Text(
+          //       widget.achievements[_currentPage]['title']?.toString() ??
+          //           'Logro',
+          //       style: const TextStyle(
+          //         fontSize: 16,
+          //         fontWeight: FontWeight.w600,
+          //         color: Colors.white,
+          //       ),
+          //       textAlign: TextAlign.center,
+          //       maxLines: 2,
+          //       overflow: TextOverflow.ellipsis,
+          //     ),
+          //   ),
         ],
       ),
     );
