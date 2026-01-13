@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'profile_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,14 +16,46 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _username = TextEditingController();
   final TextEditingController _password = TextEditingController();
+  final FocusNode _passwordFocus = FocusNode();
+  final secureStorage = FlutterSecureStorage();
 
   bool rememberMe = false;
   bool isLoading = false;
 
+  Future<void> _loadLastUsername() async {
+    final savedUsername = await secureStorage.read(key: 'last_username');
+
+    if (savedUsername != null && savedUsername.isNotEmpty) {
+      setState(() {
+        _username.text = savedUsername;
+      });
+
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _passwordFocus.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _username.dispose();
+    _password.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastUsername();
+  }
+
   Future<void> loginUser() async {
     setState(() => isLoading = true);
 
-    final url = Uri.parse('https://geekcollector.com/wp-json/geekcollector/v1/login');
+    final url = Uri.parse(
+      'https://geekcollector.com/wp-json/geekcollector/v1/login',
+    );
 
     try {
       final response = await http.post(
@@ -36,7 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
       // Validación por si falla el servidor
       if (response.statusCode != 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error de servidor. Intenta más tarde.")),
+          const SnackBar(
+            content: Text("Error de servidor. Intenta más tarde."),
+          ),
         );
         setState(() => isLoading = false);
         return;
@@ -48,7 +84,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (data['success'] == true) {
         final user = data['data'];
 
-        Navigator.push(
+        await secureStorage.write(
+          key: 'last_username',
+          value: _username.text.trim(),
+        );
+
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => ProfileScreen(
@@ -67,13 +108,15 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Credenciales incorrectas")),
+          SnackBar(
+            content: Text(data['message'] ?? "Credenciales incorrectas"),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     } finally {
       setState(() => isLoading = false);
     }
@@ -109,10 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     // Logo
-                    Image.asset(
-                      "assets/images/logo.png",
-                      height: 90,
-                    ),
+                    Image.asset("assets/images/logo.png", height: 90),
                     const SizedBox(height: 10),
 
                     const Text(
@@ -126,40 +166,57 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 25),
 
-                    // Usuario
-                    TextField(
-                      controller: _username,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: "USUARIO O CORREO",
-                        labelStyle: const TextStyle(color: Colors.white70),
-                        filled: true,
-                        fillColor: Colors.white10,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    AutofillGroup(
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _username,
+                            autofillHints: const [
+                              AutofillHints.username,
+                              AutofillHints.email,
+                            ],
+                            textInputAction: TextInputAction.next,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: "USUARIO O CORREO",
+                              labelStyle: const TextStyle(
+                                color: Colors.white70,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white10,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          TextField(
+                            controller: _password,
+                            focusNode: _passwordFocus,
+                            obscureText: true,
+                            autofillHints: const [AutofillHints.password],
+                            textInputAction: TextInputAction.done,
+                            onEditingComplete: () {
+                              TextInput.finishAutofillContext();
+                            },
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: "CONTRASEÑA",
+                              labelStyle: const TextStyle(
+                                color: Colors.white70,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white10,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-
-                    const SizedBox(height: 15),
-
-                    // Contraseña
-                    TextField(
-                      controller: _password,
-                      obscureText: true,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: "CONTRASEÑA",
-                        labelStyle: const TextStyle(color: Colors.white70),
-                        filled: true,
-                        fillColor: Colors.white10,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
 
                     // Remember me + Recuperar contraseña
                     Row(
@@ -171,20 +228,33 @@ class _LoginScreenState extends State<LoginScreen> {
                               value: rememberMe,
                               onChanged: (v) => setState(() => rememberMe = v!),
                               checkColor: Colors.black,
-                              activeColor: const Color.fromARGB(255, 255, 94, 0),
+                              activeColor: const Color.fromARGB(
+                                255,
+                                255,
+                                94,
+                                0,
+                              ),
                             ),
-                            const Text("Recordarme",
-                                style: TextStyle(color: Colors.white70)),
+                            const Text(
+                              "Recordarme",
+                              style: TextStyle(color: Colors.white70),
+                            ),
                           ],
                         ),
                         GestureDetector(
                           onTap: () {
                             launchUrl(
-                                Uri.parse("https://geekcollector.com/my-account/lost-password/"));
+                              Uri.parse(
+                                "https://geekcollector.com/my-account/lost-password/",
+                              ),
+                            );
                           },
                           child: const Text(
                             "¿Olvidaste tu contraseña?",
-                            style: TextStyle(color: Color.fromARGB(255, 255, 94, 0), fontSize: 12),
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 255, 94, 0),
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -198,18 +268,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ElevatedButton(
                         onPressed: isLoading ? null : loginUser,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 255, 123, 0),
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            255,
+                            123,
+                            0,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : const Text(
                                 "LOGIN",
                                 style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                       ),
                     ),
@@ -227,7 +306,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                         },
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.orange, width: 2),
+                          side: const BorderSide(
+                            color: Colors.orange,
+                            width: 2,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -236,12 +318,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           "SIGN UP",
                           style: TextStyle(
-                              color: Color.fromARGB(155, 218, 98, 19),
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold),
+                            color: Color.fromARGB(155, 218, 98, 19),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/profile_model.dart';
-import '../services/woocommerce_service.dart';
+import '../models/woocommerce_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

@@ -1,3 +1,5 @@
+import 'package:appfix/models/profile_model.dart' show ProfileModel;
+
 class WooCommerceService {
   // ... métodos existentes ...
 

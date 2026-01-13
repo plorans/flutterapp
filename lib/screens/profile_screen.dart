@@ -59,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
       'status': sub['status'],
       'total': sub['total'],
       'start': sub['start'],
-      'next_payment': sub['next_payment'],
+      'next_payment': sub['next_payment'], 
       'name': name,
     };
   }
@@ -197,7 +197,7 @@ class ProfileScreen extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.6,
+                            width: MediaQuery.of(context).size.width * 0.55,
                             child: const _TournamentActions(),
                           ),
                         ),
@@ -498,7 +498,8 @@ class _ActionButton extends StatelessWidget {
               label,
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
-                letterSpacing: 1.1,
+                fontSize: 11.2,
+                letterSpacing: 1,
                 color: Colors.black,
               ),
             ),
