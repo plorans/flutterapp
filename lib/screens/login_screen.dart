@@ -23,6 +23,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
 
   Future<void> _loadLastUsername() async {
+    
+    try{
+
+    
     final savedUsername = await secureStorage.read(key: 'last_username');
 
     if (savedUsername != null && savedUsername.isNotEmpty) {
@@ -33,6 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
       Future.delayed(const Duration(milliseconds: 300), () {
         _passwordFocus.requestFocus();
       });
+    }
+    } catch (e) {
+      debugPrint('SecureStorage error: $e');
     }
   }
 
@@ -47,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _loadLastUsername();
+    Future.microtask(_loadLastUsername);
   }
 
   Future<void> loginUser() async {
